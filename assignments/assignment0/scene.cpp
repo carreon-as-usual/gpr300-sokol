@@ -91,8 +91,6 @@ void Scene::Debug(void)
     glm::mat4 m{1.0f};
     auto *view = glm::value_ptr(camera.View());
     auto *proj = glm::value_ptr(camera.Projection());
-    
-    ImGuizmo::DrawGrid(view, proj, glm::value_ptr(m), 100.0f);
 
     auto light_matrix = glm::translate(glm::mat4(1.0f), light.position);
     ImGuizmo::Manipulate(

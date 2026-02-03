@@ -1,0 +1,406 @@
+{
+	"configurations" : 
+	[
+		{
+			"directories" : 
+			[
+				{
+					"build" : ".",
+					"childIndexes" : 
+					[
+						1,
+						4,
+						6
+					],
+					"hasInstallRule" : true,
+					"jsonFile" : "directory-.-Debug-d0094a50bb2071803777.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.5"
+					},
+					"projectIndex" : 0,
+					"source" : ".",
+					"targetIndexes" : 
+					[
+						3,
+						4,
+						5,
+						6,
+						7,
+						8,
+						10,
+						11,
+						12,
+						13,
+						14
+					]
+				},
+				{
+					"build" : "libs/assimp",
+					"childIndexes" : 
+					[
+						2,
+						3
+					],
+					"hasInstallRule" : true,
+					"jsonFile" : "directory-libs.assimp-Debug-61b60857f726f646ea1e.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.22"
+					},
+					"parentIndex" : 0,
+					"projectIndex" : 1,
+					"source" : "libs/assimp",
+					"targetIndexes" : 
+					[
+						15
+					]
+				},
+				{
+					"build" : "libs/assimp/contrib/zlib",
+					"hasInstallRule" : true,
+					"jsonFile" : "directory-libs.assimp.contrib.zlib-Debug-2bc65fa7c0e5394697e8.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.10.0"
+					},
+					"parentIndex" : 1,
+					"projectIndex" : 2,
+					"source" : "libs/assimp/contrib/zlib",
+					"targetIndexes" : 
+					[
+						17
+					]
+				},
+				{
+					"build" : "libs/assimp/code",
+					"hasInstallRule" : true,
+					"jsonFile" : "directory-libs.assimp.code-Debug-5884808d2c20e23839be.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.22"
+					},
+					"parentIndex" : 1,
+					"projectIndex" : 1,
+					"source" : "libs/assimp/code",
+					"targetIndexes" : 
+					[
+						2
+					]
+				},
+				{
+					"build" : "libs/glm",
+					"childIndexes" : 
+					[
+						5
+					],
+					"jsonFile" : "directory-libs.glm-Debug-7b235eb07e2e697f1fab.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.6"
+					},
+					"parentIndex" : 0,
+					"projectIndex" : 3,
+					"source" : "libs/glm"
+				},
+				{
+					"build" : "libs/glm/glm",
+					"jsonFile" : "directory-libs.glm.glm-Debug-b04bfc787e2effe2d578.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.6"
+					},
+					"parentIndex" : 4,
+					"projectIndex" : 3,
+					"source" : "libs/glm/glm",
+					"targetIndexes" : 
+					[
+						9
+					]
+				},
+				{
+					"build" : "assignments",
+					"childIndexes" : 
+					[
+						7,
+						8,
+						9
+					],
+					"jsonFile" : "directory-assignments-Debug-8c0ed46b6ab6cfb02f54.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.5"
+					},
+					"parentIndex" : 0,
+					"projectIndex" : 0,
+					"source" : "assignments"
+				},
+				{
+					"build" : "assignments/assignment0",
+					"jsonFile" : "directory-assignments.assignment0-Debug-10f9e01019bb21044086.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.5"
+					},
+					"parentIndex" : 6,
+					"projectIndex" : 0,
+					"source" : "assignments/assignment0",
+					"targetIndexes" : 
+					[
+						0
+					]
+				},
+				{
+					"build" : "assignments/assignment1",
+					"jsonFile" : "directory-assignments.assignment1-Debug-9686c4965c6870076bfa.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.5"
+					},
+					"parentIndex" : 6,
+					"projectIndex" : 0,
+					"source" : "assignments/assignment1",
+					"targetIndexes" : 
+					[
+						1
+					]
+				},
+				{
+					"build" : "assignments/workSession4",
+					"jsonFile" : "directory-assignments.workSession4-Debug-3837c59dc785af81a829.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.5"
+					},
+					"parentIndex" : 6,
+					"projectIndex" : 0,
+					"source" : "assignments/workSession4",
+					"targetIndexes" : 
+					[
+						16
+					]
+				}
+			],
+			"name" : "Debug",
+			"projects" : 
+			[
+				{
+					"childIndexes" : 
+					[
+						1,
+						3
+					],
+					"directoryIndexes" : 
+					[
+						0,
+						6,
+						7,
+						8,
+						9
+					],
+					"name" : "gpr300",
+					"targetIndexes" : 
+					[
+						0,
+						1,
+						3,
+						4,
+						5,
+						6,
+						7,
+						8,
+						10,
+						11,
+						12,
+						13,
+						14,
+						16
+					]
+				},
+				{
+					"childIndexes" : 
+					[
+						2
+					],
+					"directoryIndexes" : 
+					[
+						1,
+						3
+					],
+					"name" : "Assimp",
+					"parentIndex" : 0,
+					"targetIndexes" : 
+					[
+						2,
+						15
+					]
+				},
+				{
+					"directoryIndexes" : 
+					[
+						2
+					],
+					"name" : "zlib",
+					"parentIndex" : 1,
+					"targetIndexes" : 
+					[
+						17
+					]
+				},
+				{
+					"directoryIndexes" : 
+					[
+						4,
+						5
+					],
+					"name" : "glm",
+					"parentIndex" : 0,
+					"targetIndexes" : 
+					[
+						9
+					]
+				}
+			],
+			"targets" : 
+			[
+				{
+					"directoryIndex" : 7,
+					"id" : "assignment0::@5ff4f0f37243622cc832",
+					"jsonFile" : "target-assignment0-Debug-38f99ae9078cce177828.json",
+					"name" : "assignment0",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 8,
+					"id" : "assignment1::@92c2e6ef7366881d67e7",
+					"jsonFile" : "target-assignment1-Debug-3858a555a40eeeb3b9d7.json",
+					"name" : "assignment1",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 3,
+					"id" : "assimp::@c18b53e73a5197b875a6",
+					"jsonFile" : "target-assimp-Debug-fa58b8792374f59472df.json",
+					"name" : "assimp",
+					"projectIndex" : 1
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "batteries::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-batteries-Debug-e1a15d90268c50f3f559.json",
+					"name" : "batteries",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "copy_assets::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-copy_assets-Debug-514ab006a5a638157330.json",
+					"name" : "copy_assets",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "dbgui::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-dbgui-Debug-b748ddaa9ec56e564780.json",
+					"name" : "dbgui",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "ew::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-ew-Debug-a6f10c1923210e7e7bac.json",
+					"name" : "ew",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "fast_obj::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-fast_obj-Debug-30216ec71c49f7a7b03b.json",
+					"name" : "fast_obj",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "gl3w::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-gl3w-Debug-03a0d320d8e169e849b9.json",
+					"name" : "gl3w",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 5,
+					"id" : "glm::@9689ec0f31a21d795b02",
+					"jsonFile" : "target-glm-Debug-426e467072ea2517338d.json",
+					"name" : "glm",
+					"projectIndex" : 3
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "imgui::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-imgui-Debug-1622ebb39a0bf51a423b.json",
+					"name" : "imgui",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "imguizmo::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-imguizmo-Debug-8a1e187a7fc25e665548.json",
+					"name" : "imguizmo",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "sokol::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-sokol-Debug-9b0ac79bdb358542705c.json",
+					"name" : "sokol",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "stb::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-stb-Debug-4440f42f2956c7614160.json",
+					"name" : "stb",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "ufbx::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-ufbx-Debug-c542a9f6b7161ebe0099.json",
+					"name" : "ufbx",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 1,
+					"id" : "uninstall::@5da26302a78c65b3bcac",
+					"jsonFile" : "target-uninstall-Debug-888d55526b975795130d.json",
+					"name" : "uninstall",
+					"projectIndex" : 1
+				},
+				{
+					"directoryIndex" : 9,
+					"id" : "workSession4::@cdae705f92339cb115e3",
+					"jsonFile" : "target-workSession4-Debug-a3cbd9c70c3a154a3746.json",
+					"name" : "workSession4",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 2,
+					"id" : "zlibstatic::@142f1425b4d57e544353",
+					"jsonFile" : "target-zlibstatic-Debug-446539e33d85159d0a39.json",
+					"name" : "zlibstatic",
+					"projectIndex" : 2
+				}
+			]
+		}
+	],
+	"kind" : "codemodel",
+	"paths" : 
+	{
+		"build" : "C:/Users/caleb/Graphics/gpr300-sokol/cmake-build-debug",
+		"source" : "C:/Users/caleb/Graphics/gpr300-sokol"
+	},
+	"version" : 
+	{
+		"major" : 2,
+		"minor" : 6
+	}
+}
