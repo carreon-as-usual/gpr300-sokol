@@ -25,6 +25,8 @@ class Scene final : public batteries::Scene
     std::unique_ptr<ew::Shader> toonShading;
     std::unique_ptr<ew::Texture> texture;
 
+    std::unique_ptr<ew::Shader> postprocess;
+
     batteries::light_t light;
     batteries::material_t material;
 
@@ -35,4 +37,5 @@ class Scene final : public batteries::Scene
 
     unsigned int framebuffer;
     unsigned int fboTexture;
+    unsigned int fboDepth;
 };
