@@ -11,9 +11,6 @@
 // batteries
 #include "batteries/opengl.h"
 
-struct{
-    float alpha = 2;
-} debug;
 
 struct FullScreenQuad
 {
@@ -58,9 +55,24 @@ Scene::Scene()
 {
     suzanne = std::make_unique<ew::Model>("assets/models/suzanne.obj");
     toonShading = std::make_unique<ew::Shader>("assets/shaders/default.vs", "assets/shaders/toon.fs");
-    texture = std::make_unique<ew::Texture>("assets/textures/ZAtoon.png");
+    blinnphong = std::make_unique<ew::Shader>("assets/shaders/default.vs", "assets/shaders/blinnphong.fs");
+    toonTexture = std::make_unique<ew::Texture>("assets/textures/ZAtoon.png");
+    blinnphongTexture  = std::make_unique<ew::Texture>("assets/textures/brick_color.jpg");
 
-    postprocess = std::make_unique<ew::Shader>("assets/shaders/fullscreen.vs", "assets/shaders/blur.fs");
+    shadingTypeIndex = 0;
+    shadingTypes.push_back("blinnphong");
+    shadingTypes.push_back("toon");
+
+    processIndex = 0;
+    processes.push_back("none");
+    processes.push_back("grayscale");
+    processes.push_back("blur");
+    processes.push_back("invert");
+    processes.push_back("sharpen");
+    processes.push_back("edgedetection");
+    processes.push_back("chromaticabberation");
+
+    postprocess = std::make_unique<ew::Shader>("assets/shaders/fullscreen.vs", "assets/shaders/postprocess/" + processes[processIndex] +".fs");
 
     light = {
         .brightness = 1.0f,
@@ -68,10 +80,14 @@ Scene::Scene()
         .position = {1.0f, 1.0f, 1.0f},
     };
     material = {
-        .ambient = {0.0f, 1.0f, 0.0f},
+        .ambient = {0.3f, 0.3f, 0.3f},
         .diffuse = {0.5f, 0.5f, 0.5f},
-        .specular = {0.3f, 0.3f, 0.3f},
+        .specular = {0.5f, 0.5f, 0.5f},
         .shininess = 1.0f,
+    };
+    ambient = {
+        .intensity = 0.1f,
+        .color = {1.0f, 1.0f, 1.0f},
     };
 
     fullscreen_quad.Initialize();
@@ -136,30 +152,51 @@ void Scene::Render(void)
         glEnable(GL_CULL_FACE);
         glCullFace(GL_BACK);
         glEnable(GL_DEPTH_TEST);
-        
+
         glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, texture->getID());
+        glBindTexture(GL_TEXTURE_2D, blinnphongTexture->getID());
 
-        toonShading->use();
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, toonTexture->getID());
 
-        toonShading->setInt("zatoon", 0);
+        if(shadingTypeIndex == 0)
+        {
+            blinnphong->use();
 
-        toonShading->setMat4("model", glm::mat4(1.0f));
-        toonShading->setMat4("view_proj", view_proj);
-        toonShading->setVec3("camera", camera.position);
+            blinnphong->setInt("texture0", 0);
 
-        toonShading->setVec3("light.position", light.position);
-        toonShading->setVec3("light.color", light.color);
-        toonShading->setFloat("alpha", debug.alpha);
-        
-        toonShading->setVec3("material.ambient", material.ambient);
-        toonShading->setVec3("material.diffuse", material.diffuse);
-        toonShading->setVec3("material.specular", material.specular);
-        toonShading->setFloat("material.shininess", material.shininess);
+            blinnphong->setMat4("model", glm::mat4(1.0f));
+            blinnphong->setMat4("view_proj", view_proj);
+            blinnphong->setVec3("camera", camera.position);
 
-        toonShading->setVec3("pal.color1", palette.color1);
-        toonShading->setVec3("pal.color2", palette.color2);
+            blinnphong->setVec3("light.position", light.position);
+            blinnphong->setVec3("light.color", light.color);
 
+            blinnphong->setVec3("ambient.color", ambient.color);
+            blinnphong->setFloat("ambient.intensity", ambient.intensity);
+            
+            blinnphong->setVec3("material.ambient", material.ambient);
+            blinnphong->setVec3("material.diffuse", material.diffuse);
+            blinnphong->setVec3("material.specular", material.specular);
+            blinnphong->setFloat("material.shininess", material.shininess);
+        }
+
+        if(shadingTypeIndex == 1) 
+        {
+            toonShading->use();
+
+            toonShading->setInt("zatoon", 1);
+
+            toonShading->setMat4("model", glm::mat4(1.0f));
+            toonShading->setMat4("view_proj", view_proj);
+            toonShading->setVec3("camera", camera.position);
+
+            toonShading->setVec3("light.position", light.position);
+            toonShading->setVec3("light.color", light.color);
+
+            toonShading->setVec3("pal.color1", palette.color1);
+            toonShading->setVec3("pal.color2", palette.color2);
+        }
         // draw suzanne
         suzanne->draw();
     }
@@ -197,8 +234,6 @@ void Scene::Debug(void)
     glm::mat4 m{1.0f};
     auto *view = glm::value_ptr(camera.View());
     auto *proj = glm::value_ptr(camera.Projection());
-    
-    ImGuizmo::DrawGrid(view, proj, glm::value_ptr(m), 100.0f);
 
     auto light_matrix = glm::translate(glm::mat4(1.0f), light.position);
     ImGuizmo::Manipulate(
@@ -218,24 +253,69 @@ void Scene::Debug(void)
 
     ImGui::Begin("Controls", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
 
-    ImGui::Checkbox("Paused", &time.paused);
-    ImGui::SliderFloat("Time Factor", &time.factor, 0.0f, 10.0f);
+    // ImGui::Checkbox("Paused", &time.paused);
+    // ImGui::SliderFloat("Time Factor", &time.factor, 0.0f, 10.0f);
 
-    ImGui::DragFloat("Alpha", &debug.alpha, 0.1f, 0.0f, 8.0f);
+    if (ImGui::BeginCombo("Effect", processes[processIndex].c_str()))
+    {
+        for (auto n = 0; n < processes.size(); ++n)
+        {
+            auto is_selected = (processes[processIndex] == processes[n]);
+            if (ImGui::Selectable(processes[n].c_str(), is_selected))
+            {
+                processIndex = n;
+                postprocess = std::make_unique<ew::Shader>("assets/shaders/fullscreen.vs", "assets/shaders/postprocess/" + processes[processIndex] +".fs");
+            }
+            if (is_selected)
+            {
+                ImGui::SetItemDefaultFocus();
+            }
+        }
+        ImGui::EndCombo();
+    }
+    if (ImGui::BeginCombo("Shading Type", shadingTypes[shadingTypeIndex].c_str()))
+    {
+        for (auto n = 0; n < shadingTypes.size(); ++n)
+        {
+            auto is_selected = (shadingTypes[shadingTypeIndex] == shadingTypes[n]);
+            if (ImGui::Selectable(shadingTypes[n].c_str(), is_selected))
+            {
+                shadingTypeIndex = n;
+            }
+            if (is_selected)
+            {
+                ImGui::SetItemDefaultFocus();
+            }
+        }
+        ImGui::EndCombo();
+    }
+    if(shadingTypeIndex == 0)
+    {
+        ImGui::ColorEdit3("Light Color", &light.color.x);
 
-    ImGui::ColorEdit3("Color 1", &palette.color1.x);
-    ImGui::ColorEdit3("Color 2", &palette.color2.x);
+        ImGui::ColorEdit3("Ambient Color", &ambient.color.x);
+        ImGui::SliderFloat("Ambient Intensity", &ambient.intensity, 0.0, 1.0);
 
+        ImGui::SliderFloat3("Material Ambient", &material.ambient.x, 0.0, 1.0);
+        ImGui::SliderFloat3("Material Diffuse", &material.diffuse.x, 0.0, 1.0);
+        ImGui::SliderFloat3("Material Specular", &material.specular.x, 0.0, 1.0);
+        ImGui::SliderFloat("Material Shininess", &material.shininess, 0.0, 1.0);
+    }
+    if(shadingTypeIndex == 1)
+    {
+        ImGui::ColorEdit3("Color 1", &palette.color1.x);
+        ImGui::ColorEdit3("Color 2", &palette.color2.x);
+    }
+    /*
     ImGui::Image(
         (void*)(intptr_t)fboTexture,
         ImVec2(400, 300),
         ImVec2(0, 1), ImVec2(1, 0));
 
-    /* build debug ui here */
     ImGui::Image(
         (void*)(intptr_t)fboDepth,
         ImVec2(400, 300),
         ImVec2(0, 1), ImVec2(1, 0));
-
+    */
     ImGui::End();
 }
