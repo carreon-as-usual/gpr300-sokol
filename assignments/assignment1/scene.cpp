@@ -71,6 +71,9 @@ Scene::Scene()
     processes.push_back("sharpen");
     processes.push_back("edgedetection");
     processes.push_back("chromaticabberation");
+    processes.push_back("pixelation");
+    processes.push_back("filmgrain");
+    processes.push_back("hdrtonemapping");
 
     postprocess = std::make_unique<ew::Shader>("assets/shaders/fullscreen.vs", "assets/shaders/postprocess/" + processes[processIndex] +".fs");
 

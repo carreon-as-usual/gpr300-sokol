@@ -11,7 +11,7 @@ uniform sampler2D screen;
 //uniform float offset;
 //uniform float strength;
 const float offset = 1.0/300.0;
-const float strength = 1.0/10.0;
+const float strength = 1.0/1.0;
 
 const vec2 offsets[9] = vec2[](
   // 3 x 3 matrix
