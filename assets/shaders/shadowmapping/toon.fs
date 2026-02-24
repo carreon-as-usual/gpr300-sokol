@@ -18,8 +18,10 @@ struct Light {
 in vec3 vs_position;
 in vec3 vs_normal;
 in vec2 vs_texcoord;
+in vec4 vs_light_proj_pos;
 
 uniform sampler2D zatoon;
+uniform sampler2D shadowmap;
 
 uniform Palette pal;
 
@@ -28,7 +30,18 @@ uniform vec3 color;
 
 uniform Light light;
 
-vec3 toonShading(vec3 normal, vec3 frag_pos, Light light) {
+
+float shadowCalculation(vec4 frag_pos_light_space)
+{
+  float shadow = 1.0;
+  // vec3 proj_coords = frag_pos_light_space.xyz / frag_pos_light_space.w;
+  // float closest = texture(shadow, proj_coords.xy);
+  // float current = proj_coords.z;
+  return shadow;
+}
+
+vec3 toonShading(vec3 normal, vec3 frag_pos, Light light) 
+{
   vec3 light_dir = normalize(light.position - frag_pos);
   float ndotl = (dot(normal, light_dir) + 1.0) * 0.5;
 
@@ -40,6 +53,7 @@ vec3 toonShading(vec3 normal, vec3 frag_pos, Light light) {
 
 void main()
 {
+  float shadow = shadowCalculation(vs_light_proj_pos);
   vec3 lighting = toonShading(vs_normal, vs_position, light);
   FragColor = vec4(lighting, 1.0);
 }

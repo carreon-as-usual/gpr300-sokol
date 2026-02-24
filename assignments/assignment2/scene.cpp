@@ -11,6 +11,7 @@
 // batteries
 #include "batteries/opengl.h"
 
+glm::mat4 suzanneMatrix = glm::mat4(1.0f);
 
 struct FullScreenQuad
 {
@@ -51,11 +52,85 @@ struct FullScreenQuad
     }
 } fullscreen_quad;
 
+void Scene::CreateFrameBuffer()
+{
+    glCreateFramebuffers(1, &framebuffer);
+    glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
+    {  
+        // create texture
+        glGenTextures(1, &fbo_texture);
+        glBindTexture(GL_TEXTURE_2D, fbo_texture);
+
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 800, 600, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);  
+
+        // create texture
+        glGenTextures(1, &fbo_depth);
+        glBindTexture(GL_TEXTURE_2D, fbo_depth);
+
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH24_STENCIL8, 800, 600, 0, GL_DEPTH_STENCIL, GL_UNSIGNED_INT_24_8, NULL);
+
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);  
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_TEXTURE_2D, fbo_depth, 0);
+
+        // cleanup
+        glBindTexture(GL_TEXTURE_2D, 0);
+    }
+
+    //glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, fboTexture, 0);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, fbo_texture, 0);
+
+    if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+    {
+        printf("Framebuffer not complete \n");
+    }
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
+
+void Scene::CreateDepthBuffer()
+{
+    // framebuffer setup
+    glCreateFramebuffers(1, &shadow_fbo);
+    glBindFramebuffer(GL_FRAMEBUFFER, shadow_fbo);
+    {
+        // create depth texture
+        glGenTextures(1, &shadow_depth);
+        glBindTexture(GL_TEXTURE_2D, shadow_depth);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, 800, 600, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);  
+        // glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, 800, 600, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);  
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, shadow_depth, 0);
+
+        glDrawBuffers(0, nullptr);
+        glReadBuffer(GL_NONE);
+    }
+    
+    if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+        printf("Its not complete (depth) :(\n");
+    }
+
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
+
 Scene::Scene()
 {
+    // models
     suzanne = std::make_unique<ew::Model>("assets/models/suzanne.obj");
-    toonShading = std::make_unique<ew::Shader>("assets/shaders/default.vs", "assets/shaders/toon.fs");
+    
+    // shading
+    toonShading = std::make_unique<ew::Shader>("assets/shaders/shadowmapping/default.vs", "assets/shaders/shadowmapping/toon.fs");
     blinnphong = std::make_unique<ew::Shader>("assets/shaders/default.vs", "assets/shaders/blinnphong.fs");
+
+    depth = std::make_unique<ew::Shader>("assets/shaders/depth.vs", "assets/shaders/depth.fs");
+
+    // textures
     toonTexture = std::make_unique<ew::Texture>("assets/textures/ZAtoon.png");
     blinnphongTexture  = std::make_unique<ew::Texture>("assets/textures/brick_color.jpg");
 
@@ -94,45 +169,16 @@ Scene::Scene()
 
     fullscreen_quad.Initialize();
 
-    glCreateFramebuffers(1, &framebuffer);
-    glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
-    {  
-        // create texture
-        glGenTextures(1, &fboTexture);
-        glBindTexture(GL_TEXTURE_2D, fboTexture);
+    CreateFrameBuffer();
+    CreateDepthBuffer();
 
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 800, 600, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
-
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);  
-
-        // create texture
-        glGenTextures(1, &fboDepth);
-        glBindTexture(GL_TEXTURE_2D, fboDepth);
-
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH24_STENCIL8, 800, 600, 0, GL_DEPTH_STENCIL, GL_UNSIGNED_INT_24_8, NULL);
-
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);  
-        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_TEXTURE_2D, fboDepth, 0);
-
-        // cleanup
-        glBindTexture(GL_TEXTURE_2D, 0);
-    }
-
-    //glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, fboTexture, 0);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, fboTexture, 0);
-
-    if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-    {
-        printf("Framebuffer not complete \n");
-    }
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    plane.load(ew::createPlane(100.0f, 100.0f, 10));
 }
 
 Scene::~Scene()
 {
     glDeleteFramebuffers(1, &framebuffer);
+    glDeleteFramebuffers(1, &shadow_fbo);
 }
 
 void Scene::Update(float dt)
@@ -144,8 +190,32 @@ void Scene::Update(float dt)
 
 void Scene::Render(void)
 {
+        // render scene from light
+    glBindBuffer(GL_FRAMEBUFFER, shadow_fbo);
+    {
+        const auto light_proj = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, 0.1f, 100.0f);
+        const auto light_view = glm::lookAt(light.position, glm::vec3(0.0f), glm::vec3(0.0f, -1.0f, 0.0f));
+        const auto light_view_proj = light_proj * light_view;
+
+        glEnable(GL_CULL_FACE);
+        glCullFace(GL_BACK);
+        glEnable(GL_DEPTH_TEST);
+
+        glViewport(0, 0, 800, 600);
+
+        // glClearDepth(0.5);
+        glClear(GL_DEPTH_BUFFER_BIT);
+
+        depth->use();
+
+        depth->setMat4("model", suzanneMatrix);
+        depth->setMat4("light_view_proj", light_view_proj);
+
+        suzanne->draw();
+    }
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
     // suzanne pipeline
-    glBindFramebuffer(GL_FRAMEBUFFER, 1);
+    glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
     {
         const auto view_proj = camera.Projection() * camera.View();
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
@@ -161,13 +231,19 @@ void Scene::Render(void)
         glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D, toonTexture->getID());
 
+        glActiveTexture(GL_TEXTURE2);
+        glBindTexture(GL_TEXTURE_2D, shadow_depth);
+
+        ew::Shader activeShading;
+
         if(shadingTypeIndex == 0)
         {
             blinnphong->use();
 
             blinnphong->setInt("texture0", 0);
+            blinnphong->setInt("shadowmap", 2);
 
-            blinnphong->setMat4("model", glm::mat4(1.0f));
+            blinnphong->setMat4("model", suzanneMatrix);
             blinnphong->setMat4("view_proj", view_proj);
             blinnphong->setVec3("camera", camera.position);
 
@@ -181,6 +257,8 @@ void Scene::Render(void)
             blinnphong->setVec3("material.diffuse", material.diffuse);
             blinnphong->setVec3("material.specular", material.specular);
             blinnphong->setFloat("material.shininess", material.shininess);
+
+            activeShading = *blinnphong;
         }
 
         if(shadingTypeIndex == 1) 
@@ -188,8 +266,9 @@ void Scene::Render(void)
             toonShading->use();
 
             toonShading->setInt("zatoon", 1);
+            toonShading->setInt("shadowmap", 2);
 
-            toonShading->setMat4("model", glm::mat4(1.0f));
+            toonShading->setMat4("model", suzanneMatrix);
             toonShading->setMat4("view_proj", view_proj);
             toonShading->setVec3("camera", camera.position);
 
@@ -198,9 +277,14 @@ void Scene::Render(void)
 
             toonShading->setVec3("pal.color1", light.color);
             toonShading->setVec3("pal.color2", ambient.color);
+
+            activeShading = *toonShading;
         }
         // draw suzanne
         suzanne->draw();
+
+        activeShading.setMat4("model", glm::translate(glm::mat4(1.0), glm::vec3(0.0, -2.0, 0.0)));
+        plane.draw();
     }
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
@@ -222,7 +306,7 @@ void Scene::Render(void)
         // draw fullscreenquad
         glBindVertexArray(fullscreen_quad.vao);
         glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, fboTexture);
+        glBindTexture(GL_TEXTURE_2D, fbo_texture);
         glDrawArrays(GL_TRIANGLES, 0, 6);
     }
 }
@@ -308,16 +392,18 @@ void Scene::Debug(void)
         ImGui::ColorEdit3("Color 1", &light.color.x);
         ImGui::ColorEdit3("Color 2", &ambient.color.x);
     }
-    /*
+        ImGui::Image(
+        (void*)(intptr_t)shadow_depth,
+        ImVec2(400, 300),
+        ImVec2(0, 1), ImVec2(1, 0));
     ImGui::Image(
-        (void*)(intptr_t)fboTexture,
+        (void*)(intptr_t)fbo_texture,
         ImVec2(400, 300),
         ImVec2(0, 1), ImVec2(1, 0));
 
     ImGui::Image(
-        (void*)(intptr_t)fboDepth,
+        (void*)(intptr_t)fbo_depth,
         ImVec2(400, 300),
         ImVec2(0, 1), ImVec2(1, 0));
-    */
     ImGui::End();
 }

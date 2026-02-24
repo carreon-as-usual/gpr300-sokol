@@ -9,6 +9,8 @@
 #include "ew/model.h"
 #include "ew/shader.h"
 #include "ew/texture.h"
+#include "ew/mesh.h"
+#include "ew/procGen.h"
 
 class Scene final : public batteries::Scene
 {
@@ -21,6 +23,9 @@ class Scene final : public batteries::Scene
     void Debug(void);
 
   private:
+    void CreateFrameBuffer();
+    void CreateDepthBuffer();
+
     std::unique_ptr<ew::Model> suzanne;
     std::unique_ptr<ew::Shader> toonShading;
     std::unique_ptr<ew::Shader> blinnphong;
@@ -29,7 +34,10 @@ class Scene final : public batteries::Scene
     std::vector<std::string> shadingTypes;
     int shadingTypeIndex;
 
+    ew::Mesh plane;
+
     std::unique_ptr<ew::Shader> postprocess;
+    std::unique_ptr<ew::Shader> depth;
 
     std::vector<std::string> processes;
     int processIndex;
@@ -38,7 +46,12 @@ class Scene final : public batteries::Scene
     batteries::ambient_t ambient;
     batteries::material_t material;
 
+    // framebuffer
     unsigned int framebuffer;
-    unsigned int fboTexture;
-    unsigned int fboDepth;
+    unsigned int fbo_texture;
+    unsigned int fbo_depth;
+
+    // shadowbuffer
+    unsigned int shadow_fbo;
+    unsigned int shadow_depth;
 };

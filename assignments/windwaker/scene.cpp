@@ -21,9 +21,9 @@ Scene::Scene()
     water = std::make_unique<ew::Shader>("assets/shaders/doubledash/water.vs", "assets/shaders/doubledash/water.fs");
     texture = std::make_unique<ew::Texture>("assets/textures/brick_color.jpg");
 
-    wave_tex = std::make_unique<ew::Texture>("assets/textures/doubledash/wave_tex.png");
-    wave_spec = std::make_unique<ew::Texture>("assets/textures/doubledash/wave_spec.png");
-    wave_warp = std::make_unique<ew::Texture>("assets/textures/doubledash/wave_warp.png");
+    // wave_tex = std::make_unique<ew::Texture>("assets/textures/doubledash/wave_tex.png");
+    // wave_spec = std::make_unique<ew::Texture>("assets/textures/doubledash/wave_spec.png");
+    // wave_warp = std::make_unique<ew::Texture>("assets/textures/doubledash/wave_warp.png");
 
     //camera.position = {3.5f, 2.5f, 4.0f};
     light = {
@@ -68,7 +68,7 @@ void Scene::Render(void)
     glEnable(GL_DEPTH_TEST);
     
     glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, wave_tex->getID());
+    // glBindTexture(GL_TEXTURE_2D, wave_tex->getID());
 
     water->use();
 
