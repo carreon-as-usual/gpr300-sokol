@@ -4,6 +4,7 @@
 #include "batteries/scene.h"
 #include "batteries/lights.h"
 #include "batteries/materials.h"
+#include "batteries/opengl.h"
 
 // ew
 #include "ew/model.h"
@@ -47,11 +48,11 @@ class Scene final : public batteries::Scene
     batteries::material_t material;
 
     // framebuffer
-    unsigned int framebuffer;
-    unsigned int fbo_texture;
-    unsigned int fbo_depth;
+    GLuint framebuffer;
+    GLuint fbo_texture;
+    GLuint fbo_depth;
 
     // shadowbuffer
-    unsigned int shadow_fbo;
-    unsigned int shadow_depth;
+    GLuint shadow_fbo;
+    GLuint shadow_depth;
 };

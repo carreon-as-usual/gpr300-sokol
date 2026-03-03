@@ -103,17 +103,17 @@ void Scene::CreateDepthBuffer()
         // create depth texture
         glGenTextures(1, &shadow_depth);
         glBindTexture(GL_TEXTURE_2D, shadow_depth);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, w, h, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);  
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, w, h, 0, GL_DEPTH_COMPONENT, GL_UNSIGNED_SHORT, NULL);  
         // glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, 800, 600, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);  
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
-        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, shadow_depth, 0);
-
-        glDrawBuffers(0, nullptr);
+        glDrawBuffer(GL_NONE);
         glReadBuffer(GL_NONE);
+
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, shadow_depth, 0);
     }
     
     if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
@@ -202,7 +202,7 @@ void Scene::Render(void)
         const auto light_view_proj = light_proj * light_view;
 
         glEnable(GL_CULL_FACE);
-        glCullFace(GL_BACK);
+        glCullFace(GL_FRONT);
         glEnable(GL_DEPTH_TEST);
 
         glViewport(0, 0, 800, 600);
@@ -214,7 +214,6 @@ void Scene::Render(void)
 
         depth->setMat4("model", suzanneMatrix);
         depth->setMat4("light_view_proj", light_view_proj);
-        toonShading->setMat4("light_view_proj", light_view_proj);
 
         suzanne->draw();
     }
