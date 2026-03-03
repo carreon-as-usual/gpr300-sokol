@@ -54,6 +54,8 @@ struct FullScreenQuad
 
 void Scene::CreateFrameBuffer()
 {
+    int w = 800;
+    int h = 600;
     glCreateFramebuffers(1, &framebuffer);
     glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
     {  
@@ -61,7 +63,7 @@ void Scene::CreateFrameBuffer()
         glGenTextures(1, &fbo_texture);
         glBindTexture(GL_TEXTURE_2D, fbo_texture);
 
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 800, 600, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, w, h, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
 
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);  
@@ -70,7 +72,7 @@ void Scene::CreateFrameBuffer()
         glGenTextures(1, &fbo_depth);
         glBindTexture(GL_TEXTURE_2D, fbo_depth);
 
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH24_STENCIL8, 800, 600, 0, GL_DEPTH_STENCIL, GL_UNSIGNED_INT_24_8, NULL);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH24_STENCIL8, w, h, 0, GL_DEPTH_STENCIL, GL_UNSIGNED_INT_24_8, NULL);
 
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);  
@@ -92,6 +94,8 @@ void Scene::CreateFrameBuffer()
 
 void Scene::CreateDepthBuffer()
 {
+    int w = 800;
+    int h = 600;
     // framebuffer setup
     glCreateFramebuffers(1, &shadow_fbo);
     glBindFramebuffer(GL_FRAMEBUFFER, shadow_fbo);
@@ -99,7 +103,7 @@ void Scene::CreateDepthBuffer()
         // create depth texture
         glGenTextures(1, &shadow_depth);
         glBindTexture(GL_TEXTURE_2D, shadow_depth);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, 800, 600, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);  
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, w, h, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);  
         // glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, 800, 600, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);  
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
@@ -126,7 +130,7 @@ Scene::Scene()
     
     // shading
     toonShading = std::make_unique<ew::Shader>("assets/shaders/shadowmapping/default.vs", "assets/shaders/shadowmapping/toon.fs");
-    blinnphong = std::make_unique<ew::Shader>("assets/shaders/default.vs", "assets/shaders/blinnphong.fs");
+    blinnphong = std::make_unique<ew::Shader>("assets/shaders/shadowmapping/default.vs", "assets/shaders/blinnphong.fs");
 
     depth = std::make_unique<ew::Shader>("assets/shaders/depth.vs", "assets/shaders/depth.fs");
 
@@ -134,7 +138,7 @@ Scene::Scene()
     toonTexture = std::make_unique<ew::Texture>("assets/textures/ZAtoon.png");
     blinnphongTexture  = std::make_unique<ew::Texture>("assets/textures/brick_color.jpg");
 
-    shadingTypeIndex = 0;
+    shadingTypeIndex = 1;
     shadingTypes.push_back("blinnphong");
     shadingTypes.push_back("toon");
 
@@ -190,7 +194,7 @@ void Scene::Update(float dt)
 
 void Scene::Render(void)
 {
-        // render scene from light
+    // render scene from light
     glBindBuffer(GL_FRAMEBUFFER, shadow_fbo);
     {
         const auto light_proj = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, 0.1f, 100.0f);
@@ -210,6 +214,7 @@ void Scene::Render(void)
 
         depth->setMat4("model", suzanneMatrix);
         depth->setMat4("light_view_proj", light_view_proj);
+        toonShading->setMat4("light_view_proj", light_view_proj);
 
         suzanne->draw();
     }
@@ -287,7 +292,6 @@ void Scene::Render(void)
         plane.draw();
     }
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
     // post processing pipeline
     {
         // render fullscreen quad

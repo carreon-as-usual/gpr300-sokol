@@ -33,10 +33,12 @@ uniform Light light;
 
 float shadowCalculation(vec4 frag_pos_light_space)
 {
-  float shadow = 1.0;
-  // vec3 proj_coords = frag_pos_light_space.xyz / frag_pos_light_space.w;
-  // float closest = texture(shadow, proj_coords.xy);
-  // float current = proj_coords.z;
+  vec3 proj_coords = frag_pos_light_space.xyz / frag_pos_light_space.w;
+  proj_coords = proj_coords * 0.5 + 0.5;
+  float closest_depth = texture(shadowmap, proj_coords.xy).r;
+  float current_depth = proj_coords.z;
+  float shadow = (current_depth > closest_depth) ? 1.0 : 0.0;
+
   return shadow;
 }
 
@@ -55,5 +57,6 @@ void main()
 {
   float shadow = shadowCalculation(vs_light_proj_pos);
   vec3 lighting = toonShading(vs_normal, vs_position, light);
+  lighting *= (1.0 - shadow);
   FragColor = vec4(lighting, 1.0);
 }
