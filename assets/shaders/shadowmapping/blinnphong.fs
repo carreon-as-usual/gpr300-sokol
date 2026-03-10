@@ -9,9 +9,16 @@ struct Light {
   vec3 color;
 };
 
- struct Palette{
-  vec3 color1;
-  vec3 color2;
+struct Ambient {
+  float intensity;
+  vec3 color;
+};
+
+struct Material {
+   vec3 ambient;
+   vec3 diffuse;
+   vec3 specular;
+   float shininess;
  };
 
 // varyings
@@ -20,16 +27,16 @@ in vec3 vs_normal;
 in vec2 vs_texcoord;
 in vec4 vs_light_proj_pos;
 
-uniform sampler2D zatoon;
+uniform sampler2D texture0;
 uniform sampler2D shadowmap;
-
-uniform Palette pal;
 
 uniform vec3 camera;
 uniform vec3 color;
-uniform Light light;
-uniform float bias;
 
+uniform Light light;
+uniform Ambient ambient;
+uniform Material material;
+uniform float bias;
 
 float shadowCalculation(vec4 frag_pos_light_space)
 {
@@ -58,21 +65,27 @@ float shadowCalculation(vec4 frag_pos_light_space)
   return shadow;
 }
 
-vec3 toonShading(vec3 normal, vec3 frag_pos, Light light) 
-{
+vec3 blinnphong(vec3 normal, vec3 frag_pos, Light light, Material material) {
+  vec3 view_dir = normalize(camera - frag_pos);
   vec3 light_dir = normalize(light.position - frag_pos);
-  float ndotl = (dot(normal, light_dir) + 1.0) * 0.5;
+  vec3 reflect_dir = reflect(light_dir, vs_normal);
+  vec3 half_dir = normalize(light_dir + view_dir);
 
-  vec3 gradient = texture(zatoon, vec2(ndotl, ndotl)).rgb;
-  vec3 out_color = mix(pal.color1, pal.color2, gradient);
+  float ndotl = max(dot(normal, light_dir), 0.0);
+  float ndoth = max(dot(normal, half_dir), 0.0);
 
-  return out_color * gradient;
+  vec3 diffuse = ndotl * material.diffuse;
+  vec3 specular = pow(ndoth, material.shininess * 128.0) * material.specular;
+
+  return (diffuse + specular) * light.color;
 }
 
 void main()
 {
   float shadow = shadowCalculation(vs_light_proj_pos);
-  vec3 lighting = toonShading(vs_normal, vs_position, light);
+  vec3 lighting = blinnphong(vs_normal, vs_position, light, material) + ambient.color * ambient.intensity * material.ambient;
   lighting *= (1.0 - shadow);
-  FragColor = vec4(lighting, 1.0);
+  vec3 object_color = texture(texture0, vs_texcoord).rgb;
+  vec3 final_color = object_color * lighting;
+  FragColor = vec4(final_color, 1.0);
 }

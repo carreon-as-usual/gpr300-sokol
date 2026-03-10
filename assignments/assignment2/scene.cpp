@@ -13,6 +13,10 @@
 
 glm::mat4 suzanneMatrix = glm::mat4(1.0f);
 
+struct {
+    float bias = 0.005;
+} debug;
+
 struct FullScreenQuad
 {
     unsigned int vao;
@@ -130,7 +134,7 @@ Scene::Scene()
     
     // shading
     toonShading = std::make_unique<ew::Shader>("assets/shaders/shadowmapping/default.vs", "assets/shaders/shadowmapping/toon.fs");
-    blinnphong = std::make_unique<ew::Shader>("assets/shaders/shadowmapping/default.vs", "assets/shaders/blinnphong.fs");
+    blinnphong = std::make_unique<ew::Shader>("assets/shaders/shadowmapping/default.vs", "assets/shaders/shadowmapping/blinnphong.fs");
 
     depth = std::make_unique<ew::Shader>("assets/shaders/depth.vs", "assets/shaders/depth.fs");
 
@@ -194,12 +198,13 @@ void Scene::Update(float dt)
 
 void Scene::Render(void)
 {
+    glm::mat4 light_view_proj;
     // render scene from light
-    glBindBuffer(GL_FRAMEBUFFER, shadow_fbo);
+    glBindFramebuffer(GL_FRAMEBUFFER, shadow_fbo);
     {
         const auto light_proj = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, 0.1f, 100.0f);
-        const auto light_view = glm::lookAt(light.position, glm::vec3(0.0f), glm::vec3(0.0f, -1.0f, 0.0f));
-        const auto light_view_proj = light_proj * light_view;
+        const auto light_view = glm::lookAt(light.position, glm::vec3(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+        light_view_proj = light_proj * light_view;
 
         glEnable(GL_CULL_FACE);
         glCullFace(GL_FRONT);
@@ -262,6 +267,10 @@ void Scene::Render(void)
             blinnphong->setVec3("material.specular", material.specular);
             blinnphong->setFloat("material.shininess", material.shininess);
 
+            blinnphong->setFloat("bias", debug.bias);
+
+            blinnphong->setMat4("light_view_proj", light_view_proj);
+
             activeShading = *blinnphong;
         }
 
@@ -281,6 +290,10 @@ void Scene::Render(void)
 
             toonShading->setVec3("pal.color1", light.color);
             toonShading->setVec3("pal.color2", ambient.color);
+            
+            toonShading->setFloat("bias", debug.bias);
+    
+            toonShading->setMat4("light_view_proj", light_view_proj);
 
             activeShading = *toonShading;
         }
@@ -378,6 +391,7 @@ void Scene::Debug(void)
         }
         ImGui::EndCombo();
     }
+    ImGui::SliderFloat("Shadow Bias", &debug.bias, 0, 0.05);
     if(shadingTypeIndex == 0)
     {
         ImGui::ColorEdit3("Light Color", &light.color.x);
@@ -396,15 +410,16 @@ void Scene::Debug(void)
         ImGui::ColorEdit3("Color 2", &ambient.color.x);
     }
         ImGui::Image(
-        (void*)(intptr_t)shadow_depth,
-        ImVec2(400, 300),
-        ImVec2(0, 1), ImVec2(1, 0));
-    ImGui::Image(
         (void*)(intptr_t)fbo_texture,
         ImVec2(400, 300),
         ImVec2(0, 1), ImVec2(1, 0));
 
-    ImGui::Image(
+        ImGui::Image(
+        (void*)(intptr_t)shadow_depth,
+        ImVec2(400, 300),
+        ImVec2(0, 1), ImVec2(1, 0));
+
+        ImGui::Image(
         (void*)(intptr_t)fbo_depth,
         ImVec2(400, 300),
         ImVec2(0, 1), ImVec2(1, 0));
