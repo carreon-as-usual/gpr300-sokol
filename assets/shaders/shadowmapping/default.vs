@@ -4,10 +4,11 @@
 layout(location = 0) in vec3 in_position;
 layout(location = 1) in vec3 in_normal;
 layout(location = 2) in vec2 in_texcoord;
+layout(location = 3) in mat4 in_instanceMatrix;
 
 // uniforms
-uniform mat4 view_proj;
 uniform mat4 model;
+uniform mat4 view_proj;
 uniform mat4 light_view_proj;
 
 // varyings
@@ -18,7 +19,7 @@ out vec4 vs_light_proj_pos;
 
 void main()
 {
-  vs_position = vec3(model * vec4(in_position, 1.0));
+  vs_position = vec3(in_instanceMatrix * vec4(in_position, 1.0));
   vs_normal = in_normal;
   vs_texcoord = in_texcoord;
 

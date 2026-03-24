@@ -13,24 +13,25 @@
 #include <glm/glm.hpp>
 
 namespace ew {
-	ew::Mesh processAiMesh(aiMesh* aiMesh);
+	ew::Mesh processAiMesh(aiMesh* aiMesh, bool instanced = false);
 
-	Model::Model(const std::string& filePath)
+	Model::Model(const std::string& filePath, bool instanced)
 	{
+		this->instanced = instanced;
 		Assimp::Importer importer;
 		const aiScene* aiScene = importer.ReadFile(filePath, aiProcess_Triangulate);
 		for (size_t i = 0; i < aiScene->mNumMeshes; i++)
 		{
 			aiMesh* aiMesh = aiScene->mMeshes[i];
-			m_meshes.push_back(processAiMesh(aiMesh));
+			m_meshes.push_back(processAiMesh(aiMesh, instanced));
 		}
 	}
 
-	void Model::draw()
+	void Model::draw(int count)
 	{
 		for (size_t i = 0; i < m_meshes.size(); i++)
 		{
-			m_meshes[i].draw();
+			m_meshes[i].draw(ew::DrawMode::TRIANGLES, count);
 		}
 	}
 
@@ -39,7 +40,7 @@ namespace ew {
 	}
 
 	//Utility functions local to this file
-	ew::Mesh processAiMesh(aiMesh* aiMesh) {
+	ew::Mesh processAiMesh(aiMesh* aiMesh, bool instanced) {
 		ew::MeshData meshData;
 		for (size_t i = 0; i < aiMesh->mNumVertices; i++)
 		{
@@ -61,7 +62,7 @@ namespace ew {
 				meshData.indices.push_back(aiMesh->mFaces[i].mIndices[j]);
 			}
 		}
-		return ew::Mesh(meshData);
+		return ew::Mesh(meshData, instanced);
 	}
 
 }
