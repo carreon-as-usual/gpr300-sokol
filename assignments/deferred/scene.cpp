@@ -75,7 +75,7 @@ struct Framebuffer
         // position attachment
         glGenTextures(1, &position);
         glBindTexture(GL_TEXTURE_2D, position);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, kFramebufferWidth, kFramebufferHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, kFramebufferWidth, kFramebufferHeight, 0, GL_RGBA, GL_FLOAT, NULL);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);  
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, position, 0);
@@ -83,7 +83,7 @@ struct Framebuffer
         // normal attachment
         glGenTextures(1, &normal);
         glBindTexture(GL_TEXTURE_2D, normal);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, kFramebufferWidth, kFramebufferHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, kFramebufferWidth, kFramebufferHeight, 0, GL_RGBA, GL_FLOAT, NULL);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);  
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, normal, 0);
@@ -182,12 +182,12 @@ Scene::Scene()
     suzanne = std::make_unique<ew::Model>("assets/models/suzanne.obj");
     geometry = std::make_unique<ew::Shader>("assets/shaders/deferred/geometry.vs", "assets/shaders/deferred/geometry.fs");
     blinnphong = std::make_unique<ew::Shader>("assets/shaders/deferred/blinnphong.vs", "assets/shaders/deferred/blinnphong.fs");
-    noprocess = std::make_unique<ew::Shader>("assets/shaders/fullscreen.vs", "assets/shaders/fullscreen.fs");
+    noprocess = std::make_unique<ew::Shader>("assets/shaders/deferred/default.vs", "assets/shaders/deferred/default.fs");
     lightsphere = std::make_unique<ew::Shader>("assets/shaders/deferred/light.vs", "assets/shaders/deferred/light.fs");
     
     texture = std::make_unique<ew::Texture>("assets/textures/brick_color.jpg");
 
-    sphere.load(ew::createSphere(1.0f, 8));
+    sphere.load(ew::createSphere(debug.light_radius, 8));
 
     ambient = {
         .intensity = 1.0f,
@@ -314,6 +314,7 @@ void Scene::Render(void)
             blinnphong->setMat4("model", sphere_mat4);
             blinnphong->setVec3("light.position", light_instances[i].position);
             blinnphong->setVec3("light.color", light_instances[i].color);
+            blinnphong->setFloat("light.radius", debug.light_radius);
             
             // render sphere
             sphere.draw();
@@ -323,7 +324,8 @@ void Scene::Render(void)
 
     { // render fullscreen quad
         noprocess->use();
-        noprocess->setInt("screen", 0);
+        noprocess->setInt("albedo", 0);
+        noprocess->setInt("blinnphong", 1);
 
         glDisable(GL_BLEND);
         glEnable(GL_DEPTH_TEST);
@@ -335,7 +337,11 @@ void Scene::Render(void)
 
         glBindVertexArray(fullscreen_quad.vao);
         glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, framebuffer.position);
+        glBindTexture(GL_TEXTURE_2D, framebuffer.albedo);
+
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, lightvolumebuffer.color);
+
         glDrawArrays(GL_TRIANGLES, 0, 6);
     }
 
@@ -364,7 +370,7 @@ void Scene::Render(void)
             lightsphere->setVec3("color", light_instances[i].color);
             
             // render sphere
-        sphere.draw(ew::DrawMode::LINES);
+        // sphere.draw(ew::DrawMode::LINES);
         }
     }
 }
@@ -386,7 +392,10 @@ void Scene::Debug(void)
     if (ImGui::CollapsingHeader("Lights"))
     {
         ImGui::Checkbox("Draw Volumes", &debug.draw_light_volume);
-        ImGui::SliderFloat("Light Radius", &debug.light_radius, 1.0f, 100.0f);
+        if(ImGui::SliderFloat("Light Radius", &debug.light_radius, 0.25f, 100.0f))
+        {
+            sphere.load(ew::createSphere(debug.light_radius, 8));
+        }
     }
 
     if (ImGui::CollapsingHeader("Material"))

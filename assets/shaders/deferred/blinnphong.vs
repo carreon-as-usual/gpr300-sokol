@@ -17,6 +17,8 @@ out vec2 vs_texcoord;
 void main()
 {
     vec4 world_position = model * vec4(in_position, 1.0);
+    vs_texcoord = in_texcoord;
+    vs_normal = in_normal;
 
     gl_Position = view_proj * world_position;
 }
