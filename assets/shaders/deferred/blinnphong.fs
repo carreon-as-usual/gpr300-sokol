@@ -32,6 +32,12 @@ vec3 blinnphong(vec3 normal, vec3 frag_pos, Light light, vec4 material) {
   return (diffuse + specular) * light.color;
 }
 
+float attenuateExponential(float distance, float radius){
+	float i = clamp(1.0 - pow(distance/radius,4.0),0.0,1.0);
+	return i * i;	
+}
+
+
 void main()
 {
   vec2 uv = gl_FragCoord.xy / vec2(800, 600);
@@ -39,7 +45,8 @@ void main()
   vec3 position = texture(g_position, uv).rgb;
   vec3 normal = texture(g_normal, uv).rgb;
   vec4 material = texture(g_material, uv).rgba;
-  vec3 finalLightColor = blinnphong(normal, position, light, material);
+  float distance = length(light.position - position);
+  vec3 finalLightColor = blinnphong(normal, position, light, material) * attenuateExponential(distance, light.radius);
 
   FragLighting = vec4(finalLightColor, 1.0);
 }
