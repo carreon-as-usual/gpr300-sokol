@@ -9,6 +9,7 @@
 
 // imgui
 #include "imgui/imgui.h"
+#include <iostream>
 
 constexpr int kFramebufferWidth = 800;
 constexpr int kFramebufferHeight = 600;
@@ -75,7 +76,7 @@ struct Framebuffer
         // position attachment
         glGenTextures(1, &position);
         glBindTexture(GL_TEXTURE_2D, position);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, kFramebufferWidth, kFramebufferHeight, 0, GL_RGBA, GL_FLOAT, NULL);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, kFramebufferWidth, kFramebufferHeight, 0, GL_RGBA, GL_FLOAT, nullptr);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);  
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, position, 0);
@@ -83,7 +84,7 @@ struct Framebuffer
         // normal attachment
         glGenTextures(1, &normal);
         glBindTexture(GL_TEXTURE_2D, normal);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, kFramebufferWidth, kFramebufferHeight, 0, GL_RGBA, GL_FLOAT, NULL);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, kFramebufferWidth, kFramebufferHeight, 0, GL_RGBA, GL_FLOAT, nullptr);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);  
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, normal, 0);
@@ -91,7 +92,7 @@ struct Framebuffer
         // albedo attachment
         glGenTextures(1, &albedo);
         glBindTexture(GL_TEXTURE_2D, albedo);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, kFramebufferWidth, kFramebufferHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, kFramebufferWidth, kFramebufferHeight, 0, GL_RGBA, GL_FLOAT, nullptr);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);  
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, albedo, 0);
@@ -99,7 +100,7 @@ struct Framebuffer
         // material attachment
         glGenTextures(1, &material);
         glBindTexture(GL_TEXTURE_2D, material);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, kFramebufferWidth, kFramebufferHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, kFramebufferWidth, kFramebufferHeight, 0, GL_RGBA, GL_FLOAT, nullptr);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);  
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT3, GL_TEXTURE_2D, material, 0);
@@ -187,7 +188,8 @@ Scene::Scene()
     
     texture = std::make_unique<ew::Texture>("assets/textures/brick_color.jpg");
 
-    sphere.load(ew::createSphere(debug.light_radius, 8));
+    sphere.load(ew::createSphere(1.0, 8));
+    sphere_visual.load(ew::createSphere(0.3, 8));
 
     ambient = {
         .intensity = 1.0f,
@@ -287,7 +289,7 @@ void Scene::Render(void)
 
         glDisable(GL_DEPTH_TEST);
         glEnable(GL_CULL_FACE);
-        glCullFace(GL_BACK);
+        glCullFace(GL_FRONT);
         
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, framebuffer.position);
@@ -302,18 +304,19 @@ void Scene::Render(void)
         blinnphong->use();
         blinnphong->setMat4("view_proj", view_proj);
         blinnphong->setVec3("camera_position", camera.position);
+        blinnphong->setVec2("textureSize", glm::vec2(kFramebufferWidth, kFramebufferHeight));
         
         blinnphong->setInt("g_position", 0);
         blinnphong->setInt("g_normal", 1);
         blinnphong->setInt("g_albedo", 2);
         blinnphong->setInt("g_material", 3);
 
-        for(int i = 0; i < light_instances.size(); i++) 
+        for(const auto &light : light_instances) 
         {
-            auto sphere_mat4 = glm::translate(glm::mat4(1.0f), light_instances[i].position);
+            auto sphere_mat4 = glm::translate(glm::mat4(1.0f), light.position) * glm::scale(glm::mat4(1.0f), glm::vec3(debug.light_radius));
             blinnphong->setMat4("model", sphere_mat4);
-            blinnphong->setVec3("light.position", light_instances[i].position);
-            blinnphong->setVec3("light.color", light_instances[i].color);
+            blinnphong->setVec3("light.position", glm::vec3(light.position));
+            blinnphong->setVec3("light.color", light.color);
             blinnphong->setFloat("light.radius", debug.light_radius);
             
             // render sphere
@@ -370,7 +373,7 @@ void Scene::Render(void)
             lightsphere->setVec3("color", light_instances[i].color);
             
             // render sphere
-        // sphere.draw(ew::DrawMode::LINES);
+            sphere_visual.draw(ew::DrawMode::TRIANGLES);
         }
     }
 }
@@ -392,10 +395,7 @@ void Scene::Debug(void)
     if (ImGui::CollapsingHeader("Lights"))
     {
         ImGui::Checkbox("Draw Volumes", &debug.draw_light_volume);
-        if(ImGui::SliderFloat("Light Radius", &debug.light_radius, 0.25f, 100.0f))
-        {
-            sphere.load(ew::createSphere(debug.light_radius, 8));
-        }
+        ImGui::SliderFloat("Light Radius", &debug.light_radius, 0.25f, 100.0f);
     }
 
     if (ImGui::CollapsingHeader("Material"))
