@@ -375,6 +375,18 @@ void Scene::Render(void)
             // render sphere
             sphere_visual.draw(ew::DrawMode::TRIANGLES);
         }
+        if(debug.draw_light_volume)
+        {
+            for(int i = 0; i < light_instances.size(); i++) 
+            {
+                auto sphere_mat4 = glm::translate(glm::mat4(1.0f), light_instances[i].position) * glm::scale(glm::mat4(1.0f), glm::vec3(debug.light_radius));
+                lightsphere->setMat4("model", sphere_mat4);
+                lightsphere->setVec3("color", light_instances[i].color);
+            
+                // render sphere
+                sphere.draw(ew::DrawMode::LINES);
+            }
+        }
     }
 }
 
